@@ -24,37 +24,36 @@ tabs.forEach((tab, index) => {
   index === currentTab ? showPage(index) : hidePage(index);
 });
 
-let stackTraceInputToggleValue = true;
+const stackTraceSearchStringField = document.getElementById(
+  "stackTraceSearchStringField"
+);
+const stackTraceDisregardGeneratedCheckbox = document.getElementById(
+  "stackTraceDisregardGeneratedCheckbox"
+);
 const stackTraceInputToggle = document.getElementById("stackTraceInputToggle");
 const stackTraceTextField = document.getElementById("stackTraceTextField");
-const STACK_TRACE_INPUT_MAX_HEIGHT = "1000px";
-stackTraceTextField.style.maxHeight = STACK_TRACE_INPUT_MAX_HEIGHT;
-stackTraceInputToggle.onclick = () => {
-  stackTraceInputToggleValue = !stackTraceInputToggleValue;
-  stackTraceInputToggle.style.transform = stackTraceInputToggleValue
-    ? "rotate(0deg)"
-    : "rotate(-90deg)";
-  stackTraceTextField.style.maxHeight = stackTraceInputToggleValue
-    ? STACK_TRACE_INPUT_MAX_HEIGHT
-    : "0px";
-};
 const stackTraceOutput = document.getElementById("stackTraceOutput");
-const delimiter = " at ";
-const delimiterOffset = 1;
-const importantText = "com.hyperproof";
-const isImportant = (line) =>
-  line.slice(delimiter.length - delimiterOffset).startsWith(importantText) &&
-  !line.endsWith("(<generated>)");
+
+const DELIMITER = " at ";
+const DELIMITER_OFFSET = 1;
 const processStackTrace = () => {
+  const searchString = stackTraceSearchStringField.value;
+  const disregardGenerated = stackTraceDisregardGeneratedCheckbox.checked;
+  const isImportant = (line) =>
+    line
+      .slice(DELIMITER.length - DELIMITER_OFFSET)
+      .toLowerCase()
+      .startsWith(searchString.toLowerCase()) &&
+    (!disregardGenerated || !line.endsWith("(<generated>)"));
   let inputText = stackTraceTextField.value;
   const processedLines = [];
   let firstLine = true;
   for (
-    let i = inputText.search(delimiter);
+    let i = inputText.search(DELIMITER);
     i !== -1;
-    i = inputText.search(delimiter)
+    i = inputText.search(DELIMITER)
   ) {
-    const line = inputText.slice(0, i + delimiterOffset).trim();
+    const line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
     if (firstLine) {
       processedLines.push({ priority: 0, text: line });
     } else {
@@ -66,7 +65,7 @@ const processStackTrace = () => {
         processedLines.push({ priority: priority, text: line });
       }
     }
-    inputText = inputText.slice(i + delimiterOffset);
+    inputText = inputText.slice(i + DELIMITER_OFFSET);
     firstLine = false;
   }
   while (stackTraceOutput.lastChild) {
@@ -108,3 +107,18 @@ const processStackTrace = () => {
 };
 processStackTrace();
 stackTraceTextField.onchange = processStackTrace;
+stackTraceSearchStringField.onchange = processStackTrace;
+stackTraceDisregardGeneratedCheckbox.onchange = processStackTrace;
+
+let stackTraceInputToggleValue = true;
+const STACK_TRACE_INPUT_MAX_HEIGHT = "1000px";
+stackTraceTextField.style.maxHeight = STACK_TRACE_INPUT_MAX_HEIGHT;
+stackTraceInputToggle.onclick = () => {
+  stackTraceInputToggleValue = !stackTraceInputToggleValue;
+  stackTraceInputToggle.style.transform = stackTraceInputToggleValue
+    ? "rotate(0deg)"
+    : "rotate(-90deg)";
+  stackTraceTextField.style.maxHeight = stackTraceInputToggleValue
+    ? STACK_TRACE_INPUT_MAX_HEIGHT
+    : "0px";
+};
