@@ -1,0 +1,102 @@
+body {
+  font-family: Arial;
+}
+
+#tabs {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: solid 1px #000;
+}
+
+#tabs > * {
+  cursor: pointer;
+}
+
+.selectedTab {
+  font-weight: bold;
+}
+
+#pages {
+  padding-top: 8px;
+}
+
+#pageStackTrace {
+  display: flex;
+  flex-direction: column;
+}
+
+#stackTraceInput {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+#stackTraceInputToggle,
+.stackTraceOutputSectionToggle {
+  transition: transform 0.1s;
+  cursor: pointer;
+  width: min-content;
+  height: min-content;
+  user-select: none;
+}
+
+#stackTraceTextField {
+  transition: max-height 0.1s;
+  width: 100%;
+}
+
+#stackTraceOutput {
+  padding-top: 12px;
+}
+
+.stackTraceOutputSection {
+  transition: padding 0.2s;
+  display: flex;
+  border-radius: 4px;
+  padding: 8px 0;
+}
+
+.stackTraceOutputSectionCollapsed {
+  padding: 0px;
+}
+
+.stackTraceOutputSectionPriority0 {
+  background-color: beige;
+}
+
+.stackTraceOutputSectionPriority1 {
+  background-color: lightblue;
+}
+
+.stackTraceOutputSectionPriority2 {
+  background-color: lightgrey;
+}
+
+.stackTraceOutputSectionToggle {
+  transform: rotate(0deg);
+}
+
+.stackTraceOutputSectionCollapsed > .stackTraceOutputSectionToggle {
+  transform: rotate(-90deg);
+}
+
+.stackTraceOutputSectionText {
+  overflow: hidden;
+  max-height: 1000px;
+  transition: max-height 0.1s;
+}
+
+.stackTraceOutputSectionPriority2 > .stackTraceOutputSectionText {
+  background-color: lightgrey;
+  padding-left: 16px;
+}
+
+.stackTraceOutputSectionCollapsed > .stackTraceOutputSectionText {
+  max-height: 0px;
+}
+
+.stackTraceOutputSectionLine {
+  text-indent: -32px;
+  padding: 0 32px;
+}
