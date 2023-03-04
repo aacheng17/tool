@@ -2,6 +2,10 @@ body {
   font-family: Arial;
 }
 
+textarea {
+  width: 100%;
+}
+
 #tabs {
   display: flex;
   gap: 16px;
@@ -49,7 +53,6 @@ body {
 
 #stackTraceTextField {
   transition: max-height 0.1s;
-  width: 100%;
 }
 
 #stackTraceOutput {
@@ -105,4 +108,75 @@ body {
 .stackTraceOutputSectionLine {
   text-indent: -32px;
   padding: 0 32px;
+}
+
+#pageRadixTree {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#radixTreeSelectedNodeInfo {
+  height: 30px;
+}
+
+.radixTreeNodeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.radixTreeEdge {
+  width: 0px;
+  height: 40px;
+  border-left: 2px solid;
+}
+
+.radixTreeEdgeText {
+  cursor: default;
+  border-radius: 4px;
+  width: min-content;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0);
+  color: black;
+  transition: background-color 0.2s, max-width 0.2s, padding 0.2s, color 0.2s;
+}
+
+.radixTreeEdgeText:hover {
+  padding: 6px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 1);
+  color: white;
+}
+
+.radixTreeNode {
+  cursor: pointer;
+  border: 2px solid;
+  border-radius: 100px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radixTreeNodeWithSubscriptions {
+  background-color: beige;
+}
+
+.radixTreeBottomEdge {
+  width: 0px;
+  height: 5px;
+  border-left: 2px solid;
+}
+
+.radixTreeBottomLine {
+  border-bottom: 2px solid;
+}
+
+.radixTreeNodeChildren {
+  display: flex;
+  gap: 24px;
 }
