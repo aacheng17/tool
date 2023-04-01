@@ -145,42 +145,44 @@ const processStackTrace = () => {
     }
     inputText = inputText.slice(i + DELIMITER_OFFSET);
   }
-  const lastLine = processedLines.at(-1);
-  if (lastLine.priority < 2) {
-    stackTraceOriginalStringIndicesThatAreOpen.add(lastLine.originalStringIndex);
-  }
-  stackTraceCopyDiv.style.display = processedLines.length > 0 ? "flex" : "none";
-  while (stackTraceOutput.lastChild) {
-    stackTraceOutput.removeChild(stackTraceOutput.lastChild);
-  }
-  processedLines.forEach((processedLine) => {
-    const outputSection = document.createElement("div");
-    outputSection.classList.add(
-      "stackTraceOutputSection",
-      `stackTraceOutputSectionPriority${processedLine.priority}`
-    );
-    if (processedLine.priority > 1) {
-      outputSection.classList.add("stackTraceOutputSectionCollapsed");
+  if (processedLines.length > 0) {
+    const lastLine = processedLines.at(-1);
+    if (lastLine.priority < 2) {
+      stackTraceOriginalStringIndicesThatAreOpen.add(lastLine.originalStringIndex);
     }
-
-    const toggle = createElement("div", "stackTraceOutputSectionToggle");
-    toggle.innerHTML = "&#9660;";
-    toggle.onclick = () => {
-      if (
-        outputSection.classList.contains("stackTraceOutputSectionCollapsed")
-      ) {
-        outputSection.classList.remove("stackTraceOutputSectionCollapsed");
-        stackTraceOriginalStringIndicesThatAreOpen.add(processedLine.originalStringIndex);
-      } else {
+    stackTraceCopyDiv.style.display = processedLines.length > 0 ? "flex" : "none";
+    while (stackTraceOutput.lastChild) {
+      stackTraceOutput.removeChild(stackTraceOutput.lastChild);
+    }
+    processedLines.forEach((processedLine) => {
+      const outputSection = document.createElement("div");
+      outputSection.classList.add(
+        "stackTraceOutputSection",
+        `stackTraceOutputSectionPriority${processedLine.priority}`
+      );
+      if (processedLine.priority > 1) {
         outputSection.classList.add("stackTraceOutputSectionCollapsed");
-        stackTraceOriginalStringIndicesThatAreOpen.delete(processedLine.originalStringIndex);
       }
-    };
-    outputSection.appendChild(toggle);
-
-    outputSection.appendChild(processedLine.outputDiv);
-    stackTraceOutput.appendChild(outputSection);
-  });
+  
+      const toggle = createElement("div", "stackTraceOutputSectionToggle");
+      toggle.innerHTML = "&#9660;";
+      toggle.onclick = () => {
+        if (
+          outputSection.classList.contains("stackTraceOutputSectionCollapsed")
+        ) {
+          outputSection.classList.remove("stackTraceOutputSectionCollapsed");
+          stackTraceOriginalStringIndicesThatAreOpen.add(processedLine.originalStringIndex);
+        } else {
+          outputSection.classList.add("stackTraceOutputSectionCollapsed");
+          stackTraceOriginalStringIndicesThatAreOpen.delete(processedLine.originalStringIndex);
+        }
+      };
+      outputSection.appendChild(toggle);
+  
+      outputSection.appendChild(processedLine.outputDiv);
+      stackTraceOutput.appendChild(outputSection);
+    });
+  }
 };
 processStackTrace();
 stackTraceTextField.onchange = processStackTrace;

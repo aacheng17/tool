@@ -12,6 +12,7 @@ textarea {
   border: 1px solid grey;
   padding: 4px;
   width: max-content;
+  transition: background-color 0.1s;
 }
 
 .button:hover {
@@ -156,7 +157,13 @@ textarea {
 }
 
 #radixTreeSelectedNodeInfo {
-  height: 30px;
+  height: 80px;
+  overflow-y: auto;
+}
+
+#radixTreeOutput {
+  display: flex;
+  overflow: auto;
 }
 
 .radixTreeNodeContainer {
@@ -199,10 +206,19 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.1s;
+}
+
+.radixTreeNode:hover {
+  background-color: lightblue;
 }
 
 .radixTreeNodeWithSubscriptions {
   background-color: beige;
+}
+
+.radixTreeNodeWithSubscriptions:hover {
+  background-color: orange;
 }
 
 .radixTreeBottomEdge {
