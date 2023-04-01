@@ -14,27 +14,38 @@
     </div>
     <div id="pages">
       <div id="pageStackTrace">
-        <div id="stackTraceOptions">
-          <div>
-            <label for="stackTraceSearchStringField"
-              >Search for lines that start with</label
-            >
-            <input
-              type="text"
-              id="stackTraceSearchStringField"
-              value="com.hyperproof"
-            />
-          </div>
-          <div>
-            <input
-              type="checkbox"
-              id="stackTraceDisregardGeneratedCheckbox"
-              checked="true"
-            />
-            <label for="stackTraceDisregardGeneratedCheckbox"
-              >Disregard lines ending with
-              <code>(&lt;generated&gt;)</code></label
-            >
+        <div class="horizontalScrollWrapper">
+          <div id="stackTraceOptions">
+            <div>
+              <label for="stackTraceSearchStringField"
+                >Search for lines that start with</label
+              >
+              <input
+                type="text"
+                id="stackTraceSearchStringField"
+                value="com.hyperproof"
+              />
+            </div>
+            <div>
+              <input
+                type="checkbox"
+                id="stackTraceDisregardGeneratedCheckbox"
+                checked="true"
+              />
+              <label for="stackTraceDisregardGeneratedCheckbox"
+                >Disregard lines ending with
+                <code>(&lt;generated&gt;)</code></label
+              >
+            </div>
+            <div>
+              <input
+                type="checkbox"
+                id="stackTraceProcessGeneratedSqlCheckbox"
+                checked="true"
+              />
+              <label for="stackTraceProcessGeneratedSqlCheckbox"
+              >Process and highlight generated SQL</label>
+            </div>
           </div>
         </div>
         <div id="stackTraceInput">
@@ -45,6 +56,12 @@
             rows="10"
             placeholder="Java stack trace here"
           ></textarea>
+        </div>
+        <div id="stackTraceCopyDiv">
+          <div id="stackTraceCopyButton" class="button">
+            Copy original stack trace, up to the last visible line below, to clipboard
+          </div>
+          <div id="stackTraceCopied"></div>
         </div>
         <div id="stackTraceOutput"></div>
       </div>

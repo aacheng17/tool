@@ -31,21 +31,46 @@ tabs.forEach((tab, index) => {
   index === currentTab ? showPage(index) : hidePage(index);
 });
 
+const stackTraceOriginalStringIndicesThatAreOpen = new Set();
 const stackTraceSearchStringField = document.getElementById(
   "stackTraceSearchStringField"
 );
 const stackTraceDisregardGeneratedCheckbox = document.getElementById(
   "stackTraceDisregardGeneratedCheckbox"
 );
+const stackTraceProcessGeneratedSqlCheckbox = document.getElementById(
+  "stackTraceProcessGeneratedSqlCheckbox"
+);
 const stackTraceInputToggle = document.getElementById("stackTraceInputToggle");
 const stackTraceTextField = document.getElementById("stackTraceTextField");
+const stackTraceCopyDiv = document.getElementById("stackTraceCopyDiv");
+const stackTraceCopyButton = document.getElementById("stackTraceCopyButton");
+const stackTraceCopied = document.getElementById("stackTraceCopied");
 const stackTraceOutput = document.getElementById("stackTraceOutput");
+
+stackTraceCopyButton.onclick = () => {
+  if (stackTraceOriginalStringIndicesThatAreOpen.size > 0) {
+    navigator.clipboard.writeText(
+      stackTraceTextField.value.slice(0, Math.max(...Array.from(stackTraceOriginalStringIndicesThatAreOpen)))
+    );
+    stackTraceCopied.innerHTML = "Copied to clipboard &#x2713";
+  } else {
+    stackTraceCopied.innerHTML = "Not copied, no lines are currently visible";
+  }
+  stackTraceCopied.style.transition = "opacity 0s linear";
+  stackTraceCopied.style.opacity = 1;
+  setTimeout(() => {
+    stackTraceCopied.style.transition = "opacity 3s linear";
+    stackTraceCopied.style.opacity = 0;
+  }, 1);
+};
 
 const DELIMITER = " at ";
 const DELIMITER_OFFSET = 1;
 const processStackTrace = () => {
   const searchString = stackTraceSearchStringField.value;
   const disregardGenerated = stackTraceDisregardGeneratedCheckbox.checked;
+  const processGeneratedSql = stackTraceProcessGeneratedSqlCheckbox.checked;
   const isImportant = (line) =>
     line
       .slice(DELIMITER.length - DELIMITER_OFFSET)
@@ -55,26 +80,76 @@ const processStackTrace = () => {
   let inputText = stackTraceTextField.value;
   const processedLines = [];
   let firstLine = true;
+  let originalStringIndex = 0;
   for (
     let i = inputText.search(DELIMITER);
     i !== -1;
     i = inputText.search(DELIMITER)
   ) {
-    const line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
-    if (firstLine) {
-      processedLines.push({ priority: 0, text: line });
+    let line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
+    const outputLine = createElement("div", "stackTraceOutputSectionLine");
+    if (processGeneratedSql) {
+      while ((processedSqlMatch = / bind => \[(.*?)(?<!\\)\]/.exec(line)) != null) {
+        const bindArray = processedSqlMatch[1].split(", ");
+        let sqlStringStartIndex = line.slice(0, processedSqlMatch.index).lastIndexOf("Call: ");
+        let sqlString = line.slice(sqlStringStartIndex, processedSqlMatch.index);
+        let bindArrayIndex = 0;
+        for (let i = 0; i < sqlString.length; i++) {
+          if (sqlString[i] === "?") {
+            sqlString = sqlString.slice(0, i) + bindArray[bindArrayIndex] + sqlString.slice(i + 1);
+            i += bindArray[bindArrayIndex].length - 1;
+            bindArrayIndex++;
+            if (bindArrayIndex >= bindArray.length) {
+              break;
+            }
+          }
+        }
+        const outputSpan1 = createElement("span", "stackTraceOutputTextSpan");
+        outputSpan1.innerText = line.slice(0, sqlStringStartIndex);
+        const outputSpan2 = createElement("span", "stackTraceOutputTextSpan", "stackTraceOutputGeneratedSqlText");
+        outputSpan2.innerText = sqlString;
+        outputLine.appendChild(outputSpan1)
+        outputLine.appendChild(outputSpan2);
+        line = line.slice(processedSqlMatch.index + processedSqlMatch[0].length);
+      }
+      if (line.length > 0) {
+        const outputSpan = createElement("span", "stackTraceOutputTextSpan");
+        outputSpan.innerText = line;
+        outputLine.appendChild(outputSpan);
+      }
     } else {
-      const priority = firstLine ? 0 : isImportant(line) ? 1 : 2;
+      const outputSpan = createElement("span", "stackTraceOutputTextSpan");
+      outputSpan.innerText = line;
+      outputLine.appendChild(outputSpan);
+    }
+    originalStringIndex += i + DELIMITER_OFFSET;
+    if (firstLine) {
+      const outputDiv = createElement("div", "stackTraceOutputSectionText");
+      outputDiv.appendChild(outputLine);
+      processedLines.push({ priority: 0, originalStringIndex: originalStringIndex, outputDiv: outputDiv });
+      firstLine = false;
+    } else {
+      const priority = isImportant(line) ? 1 : 2;
       const lastLine = processedLines.at(-1);
       if (priority === lastLine.priority) {
-        lastLine.text += "\n" + line;
+        lastLine.outputDiv.appendChild(outputLine);
+        lastLine.originalStringIndex = originalStringIndex;
       } else {
-        processedLines.push({ priority: priority, text: line });
+        if (lastLine.priority < 2) {
+          stackTraceOriginalStringIndicesThatAreOpen.add(lastLine.originalStringIndex);
+        }
+        const outputDiv = createElement("div", "stackTraceOutputSectionText");
+        outputDiv.appendChild(outputLine);
+        processedLines.push({ priority: priority, originalStringIndex: originalStringIndex, outputDiv: outputDiv });
       }
     }
     inputText = inputText.slice(i + DELIMITER_OFFSET);
-    firstLine = false;
   }
+  const lastLine = processedLines.at(-1);
+  if (lastLine.priority < 2) {
+    stackTraceOriginalStringIndicesThatAreOpen.add(lastLine.originalStringIndex);
+  }
+  stackTraceCopyDiv.style.display = processedLines.length > 0 ? "flex" : "none";
   while (stackTraceOutput.lastChild) {
     stackTraceOutput.removeChild(stackTraceOutput.lastChild);
   }
@@ -95,20 +170,15 @@ const processStackTrace = () => {
         outputSection.classList.contains("stackTraceOutputSectionCollapsed")
       ) {
         outputSection.classList.remove("stackTraceOutputSectionCollapsed");
+        stackTraceOriginalStringIndicesThatAreOpen.add(processedLine.originalStringIndex);
       } else {
         outputSection.classList.add("stackTraceOutputSectionCollapsed");
+        stackTraceOriginalStringIndicesThatAreOpen.delete(processedLine.originalStringIndex);
       }
     };
     outputSection.appendChild(toggle);
 
-    const text = createElement("div", "stackTraceOutputSectionText");
-    processedLine.text.split("\n").forEach((l) => {
-      const line = createElement("div", "stackTraceOutputSectionLine");
-      line.innerText = l;
-      text.appendChild(line);
-    });
-    outputSection.appendChild(text);
-
+    outputSection.appendChild(processedLine.outputDiv);
     stackTraceOutput.appendChild(outputSection);
   });
 };
@@ -116,6 +186,7 @@ processStackTrace();
 stackTraceTextField.onchange = processStackTrace;
 stackTraceSearchStringField.onchange = processStackTrace;
 stackTraceDisregardGeneratedCheckbox.onchange = processStackTrace;
+stackTraceProcessGeneratedSqlCheckbox.onchange = processStackTrace;
 
 let stackTraceInputToggleValue = true;
 const STACK_TRACE_INPUT_MAX_HEIGHT = "1000px";
@@ -195,7 +266,7 @@ const postProcessRadixTree = (radixTreeNodeElement) => {
           }px`;
           bottomLine.style.marginLeft = `${firstChildHalfWidth}px`;
           bottomLine.style.marginRight = `${lastChildHalfWidth}px`;
-          nodeParent = node.parentElement;
+          const nodeParent = node.parentElement;
           nodeParent.insertBefore(bottomLine, nodeParent.lastChild);
         }
       } else if (node.classList.contains("radixTreeEdgeText")) {
