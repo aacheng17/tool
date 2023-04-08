@@ -184,7 +184,8 @@ const processStackTrace = () => {
     });
   }
 };
-processStackTrace();
+// Wait to do this, to allow input field to repopulate after user reopens closed tab
+setTimeout(processStackTrace, 250);
 stackTraceTextField.onchange = processStackTrace;
 stackTraceSearchStringField.onchange = processStackTrace;
 stackTraceDisregardGeneratedCheckbox.onchange = processStackTrace;
