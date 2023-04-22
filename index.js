@@ -77,16 +77,23 @@ const processStackTrace = () => {
       .toLowerCase()
       .startsWith(searchString.toLowerCase()) &&
     (!disregardGenerated || !line.endsWith("(<generated>)"));
-  let inputText = stackTraceTextField.value;
+  let inputText = stackTraceTextField.value.replaceAll(/[\n\t]/ig, " ");
   const processedLines = [];
   let firstLine = true;
   let originalStringIndex = 0;
-  for (
+  while (true) {
+    if (inputText === "") {
+      break;
+    }
     let i = inputText.search(DELIMITER);
-    i !== -1;
-    i = inputText.search(DELIMITER)
-  ) {
-    let line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
+    let line;
+    if (i === -1) {
+      line = inputText;
+      inputText = "";
+    } else {
+      line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
+    }
+    console.log(line);
     const outputLine = createElement("div", "stackTraceOutputSectionLine");
     if (processGeneratedSql) {
       while ((processedSqlMatch = / bind => \[(.*?)(?<!\\)\]/.exec(line)) != null) {
@@ -143,7 +150,9 @@ const processStackTrace = () => {
         processedLines.push({ priority: priority, originalStringIndex: originalStringIndex, outputDiv: outputDiv });
       }
     }
-    inputText = inputText.slice(i + DELIMITER_OFFSET);
+    if (inputText !== "") {
+      inputText = inputText.slice(i + DELIMITER_OFFSET);
+    }
   }
   if (processedLines.length > 0) {
     const lastLine = processedLines.at(-1);
