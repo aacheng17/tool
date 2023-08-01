@@ -93,7 +93,6 @@ const processStackTrace = () => {
     } else {
       line = inputText.slice(0, i + DELIMITER_OFFSET).trim();
     }
-    console.log(line);
     const outputLine = createElement("div", "stackTraceOutputSectionLine");
     if (processGeneratedSql) {
       while ((processedSqlMatch = / bind => \[(.*?)(?<!\\)\]/.exec(line)) != null) {
@@ -314,3 +313,108 @@ const processRadixTree = async () => {
 };
 processRadixTree();
 radixTreeTextField.onchange = processRadixTree;
+
+const compiledJsUrlStringField = document.getElementById("compiledJsUrlStringField")
+const compiledJsLineField = document.getElementById("compiledJsLineField");
+const compiledJsBeforeField = document.getElementById("compiledJsBeforeField");
+const compiledJsAfterField = document.getElementById("compiledJsAfterField");
+const compiledJsSearchStringField = document.getElementById("compiledJsSearchStringField");
+const compiledJsFileUpload = document.getElementById("compiledJsFileUpload")
+const compiledJsOutput = document.getElementById("compiledJsOutput");
+const parsedEntries = [];
+
+const processHarFile = async () => {
+  const file = compiledJsFileUpload.files[0];
+  if (!file) {
+    return;
+  }
+
+  while (compiledJsOutput.lastChild) {
+    compiledJsOutput.removeChild(compiledJsOutput.lastChild);
+  }
+
+  const [lineNumber, position] = compiledJsLineField.value.split(":").map((x) => parseInt(x));
+  const text = await file.text();
+  const json = JSON.parse(text);
+  for (const entry of json.log.entries) {
+    if (entry.response.content.mimeType === "application/javascript") {
+      if (compiledJsUrlStringField.value && !entry.request.url.includes(compiledJsUrlStringField.value)) {
+        continue;
+      }
+
+      const text = entry.response.content.text;
+      if (!text) {
+        continue;
+      }
+      
+      const line = entry.response.content.text.split("\n")[lineNumber - 1];
+      if (!line) {
+        continue;
+      }
+
+      const before = compiledJsBeforeField.value ? parseInt(compiledJsBeforeField.value) : 0;
+      const after = compiledJsAfterField.value ? parseInt(compiledJsAfterField.value) : 100;
+      const parsedText = line.slice(position - before - 1, position + after - 1);
+      if (!parsedText) {
+        continue;
+      }
+
+      const sectionDiv = createElement("div", "stackTraceOutputSectionText");
+      const endpointDiv = createElement("div");
+      endpointDiv.innerText = `${entry.request.method} ${entry.request.url}`;
+      sectionDiv.appendChild(endpointDiv);
+      let codeDiv;
+
+      if (compiledJsSearchStringField.value && parsedText.includes(compiledJsSearchStringField.value)) {
+        codeDiv = createElement("div");
+
+        const appendSearchStringSpan = () => {
+          const span = createElement("span", "stackTraceOutputGeneratedSqlText", compiledJsSearchStringField.value);
+          span.innerText = compiledJsSearchStringField.value;
+          codeDiv.appendChild(span);
+        }
+
+        const portions = parsedText.split(compiledJsSearchStringField.value);
+        for (let i = 0; i < portions.length; i++) {
+          const portion = portions[i];
+          const span = createElement("span");
+          span.innerText = portion;
+          codeDiv.appendChild(span)
+          if (i !== portions.length - 1) {
+            appendSearchStringSpan();
+          }
+        }
+
+        sectionDiv.appendChild(codeDiv);
+        parsedEntries.unshift(sectionDiv);
+      } else {
+        codeDiv = createElement("code");
+        codeDiv.innerText = parsedText;
+        sectionDiv.appendChild(codeDiv);
+        parsedEntries.push(sectionDiv);
+      }
+    }
+  }
+
+  parsedEntries.forEach((entry) => {
+    const outputSection = createElement("div", "stackTraceOutputSection");
+
+    const toggle = createElement("div", "stackTraceOutputSectionToggle");
+    toggle.innerHTML = "&#9660;";
+    toggle.onclick = () => {
+      if (
+        outputSection.classList.contains("stackTraceOutputSectionCollapsed")
+      ) {
+        outputSection.classList.remove("stackTraceOutputSectionCollapsed");
+      } else {
+        outputSection.classList.add("stackTraceOutputSectionCollapsed");
+      }
+    };
+    outputSection.appendChild(toggle);
+    
+    outputSection.appendChild(entry);
+    compiledJsOutput.appendChild(outputSection);
+  });
+};
+
+compiledJsFileUpload.onchange = processHarFile;

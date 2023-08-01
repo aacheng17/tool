@@ -235,3 +235,13 @@ textarea {
   display: flex;
   gap: 24px;
 }
+
+#pageCompiledJs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#compiledJsOutput {
+  width: 99%;
+}
