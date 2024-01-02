@@ -97,23 +97,23 @@ const processStackTrace = () => {
     if (processGeneratedSql) {
       while ((processedSqlMatch = / bind => \[(.*?)(?<!\\)\]/.exec(line)) != null) {
         const bindArray = processedSqlMatch[1].split(", ");
-        let sqlStringStartIndex = line.slice(0, processedSqlMatch.index).lastIndexOf("Call: ");
-        let sqlString = line.slice(sqlStringStartIndex, processedSqlMatch.index);
-        let bindArrayIndex = 0;
-        for (let i = 0; i < sqlString.length; i++) {
-          if (sqlString[i] === "?") {
-            sqlString = sqlString.slice(0, i) + bindArray[bindArrayIndex] + sqlString.slice(i + 1);
-            i += bindArray[bindArrayIndex].length - 1;
-            bindArrayIndex++;
-            if (bindArrayIndex >= bindArray.length) {
+        let sqlString = line.slice(0, processedSqlMatch.index);
+        let bindArrayIndex = bindArray.length - 1;
+        let j = processedSqlMatch.index;
+        for (; j > 0; j--) {
+          if (sqlString[j] === "?") {
+            sqlString = sqlString.slice(0, j) + "<b>" + bindArray[bindArrayIndex] + "</b>" + sqlString.slice(j + 1);
+            bindArrayIndex--;
+            if (bindArrayIndex < 0) {
               break;
             }
           }
         }
+        sqlString = sqlString.slice(j);
         const outputSpan1 = createElement("span", "stackTraceOutputTextSpan");
-        outputSpan1.innerText = line.slice(0, sqlStringStartIndex);
+        outputSpan1.innerText = line.slice(0, j);
         const outputSpan2 = createElement("span", "stackTraceOutputTextSpan", "stackTraceOutputGeneratedSqlText");
-        outputSpan2.innerText = sqlString;
+        outputSpan2.innerHTML = sqlString;
         outputLine.appendChild(outputSpan1)
         outputLine.appendChild(outputSpan2);
         line = line.slice(processedSqlMatch.index + processedSqlMatch[0].length);
