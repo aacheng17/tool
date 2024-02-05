@@ -78,6 +78,7 @@ const processStackTrace = () => {
       .startsWith(searchString.toLowerCase()) &&
     (!disregardGenerated || !line.endsWith("(<generated>)"));
   let inputText = stackTraceTextField.value.replaceAll(/[\n\t]/ig, " ");
+  inputText = inputText.replaceAll(/\\n\\tat /g, " at ");
   const processedLines = [];
   let firstLine = true;
   let originalStringIndex = 0;
